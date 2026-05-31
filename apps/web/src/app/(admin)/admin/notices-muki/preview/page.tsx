@@ -8,7 +8,16 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiClient } from '@/lib/api-client';
+
+interface CompanyInfo {
+  name: string;
+  postalCode: string;
+  address1: string;
+  address2: string;
+}
 
 
 /* ---------- sample preview data ---------- */
@@ -72,6 +81,8 @@ const tdStyle: React.CSSProperties = {
   verticalAlign: 'top',
   fontSize: 12.5,
   lineHeight: 1.7,
+  wordBreak: 'break-word',
+  overflowWrap: 'break-word',
 };
 
 /* work-time markers */
@@ -82,6 +93,15 @@ function wtMark(system: string, target: string) {
 export default function AdminNoticesMukiPreviewPage() {
   const router = useRouter();
   const d = sample;
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
+
+  useEffect(() => {
+    apiClient<CompanyInfo>('/payroll/company-info')
+      .then(setCompanyInfo)
+      .catch(() => {});
+  }, []);
+
+  const companyAddress = [companyInfo?.address1, companyInfo?.address2].filter(Boolean).join(' ');
 
   const handlePdfDownload = () => {
     window.print();
@@ -91,11 +111,14 @@ export default function AdminNoticesMukiPreviewPage() {
     <div>
       {/* ---------- print stylesheet ---------- */}
       <style>{`
+        @page { size: A4 portrait; margin: 15mm; }
         @media print {
           body * { visibility: hidden; }
           #muki-preview-body, #muki-preview-body * { visibility: visible; }
           #muki-preview-body { position: absolute; left: 0; top: 0; width: 100%; }
           .no-print { display: none !important; }
+          tr { break-inside: avoid; page-break-inside: avoid; }
+          .print-page-2 { break-before: page !important; page-break-before: always !important; }
         }
       `}</style>
 
@@ -157,14 +180,14 @@ export default function AdminNoticesMukiPreviewPage() {
               lineHeight: 1.8,
             }}
           >
-            事業場名称・所在地　株式会社Lervia
+            事業場名称・所在地　{companyInfo?.name || ''}
             <br />
-            大阪市中央区南船場111-111
+            {companyAddress}
             <br />
-            使用者職氏名　代表取締役　矢野常貴
+            使用者職氏名
           </div>
 
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
             <tbody>
               <tr>
                 <td style={thStyle}>契約期間</td>
@@ -269,8 +292,8 @@ export default function AdminNoticesMukiPreviewPage() {
         </div>
 
         {/* ===== Page 2 ===== */}
-        <div style={pageStyle}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={pageStyle} className="print-page-2">
+          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
             <tbody>
               <tr>
                 <td style={thStyle}>賃金</td>

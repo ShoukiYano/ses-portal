@@ -7,8 +7,16 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiClient } from '@/lib/api-client';
+
+interface CompanyInfo {
+  name: string;
+  postalCode: string;
+  address1: string;
+  address2: string;
+}
 
 
 /* ---------- sample data ---------- */
@@ -60,11 +68,18 @@ const serifCls = 'font-serif text-sm leading-[2] text-[#1A1A1A]';
 const thCls =
   'border border-[#555] px-2.5 py-2 text-xs font-medium bg-[#f5f5f0] w-[100px] align-top leading-[1.7]';
 const tdCls =
-  'border border-[#555] px-2.5 py-2 text-xs align-top leading-[1.7]';
+  'border border-[#555] px-2.5 py-2 text-xs align-top leading-[1.7] break-words';
 
 export default function AdminNoticePreviewPage() {
   const router = useRouter();
   const [previewType, setPreviewType] = useState<'offer' | 'labor'>('offer');
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
+
+  useEffect(() => {
+    apiClient<CompanyInfo>('/payroll/company-info')
+      .then(setCompanyInfo)
+      .catch(() => {});
+  }, []);
 
   const handlePdfDownload = () => {
     window.print();
@@ -74,11 +89,14 @@ export default function AdminNoticePreviewPage() {
     <div>
       {/* ---------- print stylesheet ---------- */}
       <style>{`
+        @page { size: A4 portrait; margin: 15mm; }
         @media print {
           body * { visibility: hidden; }
           #notice-preview-body, #notice-preview-body * { visibility: visible; }
           #notice-preview-body { position: absolute; left: 0; top: 0; width: 100%; }
           .no-print { display: none !important; }
+          tr { break-inside: avoid; page-break-inside: avoid; }
+          .print-page-2 { break-before: page !important; page-break-before: always !important; }
         }
       `}</style>
 
@@ -126,23 +144,24 @@ export default function AdminNoticePreviewPage() {
 
       {/* ---------- preview body ---------- */}
       <div id="notice-preview-body" style={{ maxWidth: 800, margin: '0 auto' }}>
-        {previewType === 'offer' ? <OfferPreview /> : <LaborPreview />}
+        {previewType === 'offer' ? <OfferPreview companyInfo={companyInfo} /> : <LaborPreview companyInfo={companyInfo} />}
       </div>
     </div>
   );
 }
 
 /* ========== 採用内定通知書 preview ========== */
-function OfferPreview() {
+function OfferPreview({ companyInfo }: { companyInfo: CompanyInfo | null }) {
   const d = sampleOffer;
+  const companyAddress = [companyInfo?.address1, companyInfo?.address2].filter(Boolean).join(' ');
   return (
     <div className={`${pageCls} ${serifCls}`}>
       <div className="text-right">{d.date}</div>
       <div className="my-6">{d.person}　様</div>
       <div className="text-right my-5">
-        株式会社Lervia
+        {companyInfo?.name || ''}
         <br />
-        <span className="ml-16">代表取締役　矢野常貴</span>
+        <span className="text-xs">{companyAddress}</span>
       </div>
       <div className="text-center text-lg font-semibold tracking-[0.2em] my-10">
         採用内定通知書
@@ -195,8 +214,9 @@ function OfferPreview() {
 }
 
 /* ========== 労働条件通知書 preview ========== */
-function LaborPreview() {
+function LaborPreview({ companyInfo }: { companyInfo: CompanyInfo | null }) {
   const d = sampleLabor;
+  const companyAddress = [companyInfo?.address1, companyInfo?.address2].filter(Boolean).join(' ');
   return (
     <>
       {/* page 1 */}
@@ -210,14 +230,14 @@ function LaborPreview() {
         <div className="mb-1 text-[13px]">{d.date}</div>
         <div className="mb-3 text-[13px]">{d.person}　殿</div>
         <div className="text-right mb-5 text-xs leading-[1.8]">
-          事業場名称・所在地　株式会社Lervia
+          事業場名称・所在地　{companyInfo?.name || ''}
           <br />
-          大阪市中央区南船場111-111
+          {companyAddress}
           <br />
-          使用者職氏名　代表取締役　矢野常貴
+          使用者職氏名
         </div>
 
-        <table className="w-full border-collapse">
+        <table className="w-full border-collapse table-fixed">
           <tbody>
             <tr>
               <td className={thCls}>契約期間</td>
@@ -251,7 +271,13 @@ function LaborPreview() {
                 <span className="text-[11px]">
                   【労働契約法に定める同一の企業との間での通算契約期間が５年を超える有期労働契約の締結の場合】
                   <br />
-                  本契約期間中に会社に対して期間の定めのない労働契約（無期労働契約）の締結の申込みをすることにより、本契約期間の末日の翌日から、無期労働契約での雇用に転換することができる。この場合の本契約からの労働条件の変更の有無（◯無　・　有（別紙のとおり））
+                  本契約期間中に会社に対して期間の定めのない労働契約（無期労働契約）の
+                  <br />
+                  締結の申込みをすることにより、本契約期間の末日の翌日から、
+                  <br />
+                  無期労働契約での雇用に転換することができる。
+                  <br />
+                  この場合の本契約からの労働条件の変更の有無（◯無　・　有（別紙のとおり））
                 </span>
               </td>
             </tr>
@@ -344,8 +370,8 @@ function LaborPreview() {
       </div>
 
       {/* page 2 */}
-      <div className={`${pageCls} ${serifCls}`} style={{ lineHeight: 1.7 }}>
-        <table className="w-full border-collapse">
+      <div className={`${pageCls} ${serifCls} print-page-2`} style={{ lineHeight: 1.7 }}>
+        <table className="w-full border-collapse table-fixed">
           <tbody>
             <tr>
               <td className={thCls}>賃金</td>
