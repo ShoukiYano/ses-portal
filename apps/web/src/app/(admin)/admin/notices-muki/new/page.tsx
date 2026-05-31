@@ -131,8 +131,14 @@ export default function AdminNoticesMukiNewPage() {
   /* ---- 候補社員の読み込み ---- */
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
   useEffect(() => {
-    apiClient<EmployeeOption[]>('/employees')
-      .then((data) => setEmployees(Array.isArray(data) ? data : []))
+    apiClient<{ data: EmployeeOption[] } | EmployeeOption[]>('/employees?limit=200')
+      .then((res) => {
+        if (Array.isArray(res)) {
+          setEmployees(res);
+        } else if (res && Array.isArray((res as any).data)) {
+          setEmployees((res as any).data);
+        }
+      })
       .catch(() => { /* noop */ });
   }, []);
 
