@@ -11,6 +11,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/toast';
 import { apiClient } from '@/lib/api-client';
+import { OfferPreview } from '../_components/OfferPreview';
+import { LaborPreview } from '../_components/LaborPreview';
+import type { CompanyInfo } from '../_components/OfferPreview';
 
 interface EmployeeOption {
   id: string;
@@ -43,6 +46,13 @@ const readonlyCls =
 export default function AdminNoticeNewPage() {
   const router = useRouter();
   const { toast } = useToast();
+
+  /* ---- モーダル・会社情報 ---- */
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
+  useEffect(() => {
+    apiClient<CompanyInfo>('/payroll/company-info').then(setCompanyInfo).catch(() => {});
+  }, []);
 
   /* ---- 対象者 ---- */
   const [person, setPerson] = useState('');
@@ -226,10 +236,6 @@ export default function AdminNoticeNewPage() {
     }
   };
 
-  const handlePreview = () => {
-    router.push('/admin/notices/preview');
-  };
-
   return (
     <div>
       {/* ---------- header ---------- */}
@@ -243,17 +249,13 @@ export default function AdminNoticeNewPage() {
             キャンセル
           </button>
           <button
-            className="btn-outline text-sm py-2"
-            onClick={handlePreview}
+            className="btn-primary text-sm py-2"
+            onClick={() => {
+              if (!person) { toast('対象社員を選択してください'); return; }
+              setShowPreviewModal(true);
+            }}
           >
-            プレビュー
-          </button>
-          <button
-            className="btn-primary text-sm py-2 disabled:opacity-50"
-            onClick={handleSave}
-            disabled={issuing}
-          >
-            {issuing ? '発行中...' : '保存・発行'}
+            保存・発行
           </button>
         </div>
       </div>
@@ -918,6 +920,108 @@ export default function AdminNoticeNewPage() {
           </div>
         )}
       </div>
+
+      {/* ========== 発行確認プレビューモーダル ========== */}
+      {showPreviewModal && (() => {
+        const selectedEmployee = employees.find((e) => e.id === person);
+        const personName = selectedEmployee
+          ? `${selectedEmployee.lastName}${selectedEmployee.firstName}`
+          : '';
+        const holidays =
+          [holSat && '土', holSun && '日', holHoliday && '祝']
+            .filter(Boolean)
+            .join('・') + (holOther ? `（${holOther}）` : '');
+        return (
+          <>
+            <style>{`
+              @page { size: A4 portrait; margin: 15mm; }
+              @media print {
+                body * { visibility: hidden; }
+                #notice-confirm-preview, #notice-confirm-preview * { visibility: visible; }
+                #notice-confirm-preview { position: absolute; left: 0; top: 0; width: 100%; }
+                .no-print { display: none !important; }
+                tr { break-inside: avoid; page-break-inside: avoid; }
+                .print-page-2 { break-before: page !important; page-break-before: always !important; }
+              }
+            `}</style>
+            <div className="fixed inset-0 bg-white z-[300] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-border px-6 py-3 flex items-center justify-between z-10 no-print">
+                <h2 className="text-base font-medium">発行内容の確認</h2>
+                <div className="flex items-center gap-2">
+                  <button
+                    className="btn-outline text-sm py-2"
+                    onClick={() => setShowPreviewModal(false)}
+                  >
+                    戻って修正
+                  </button>
+                  <button
+                    className="btn-outline text-sm py-2"
+                    onClick={() => window.print()}
+                  >
+                    印刷 / PDF保存
+                  </button>
+                  <button
+                    className="btn-primary text-sm py-2 disabled:opacity-50"
+                    onClick={handleSave}
+                    disabled={issuing}
+                  >
+                    {issuing ? '発行中...' : '発行確定'}
+                  </button>
+                </div>
+              </div>
+              <div id="notice-confirm-preview" style={{ maxWidth: 800, margin: '24px auto' }}>
+                {isOffer ? (
+                  <OfferPreview
+                    date={offerDate}
+                    person={personName}
+                    joinDate={joinDate}
+                    workplace={workplaceOffer}
+                    salary={salaryOffer}
+                    transport={transport}
+                    trial={trial}
+                    deadline={deadline}
+                    cancelReasons={cancelReasons
+                      .split('\n')
+                      .map((s) => s.replace(/^\d+\.\s*/, '').trim())
+                      .filter(Boolean)}
+                    requiredDocs={requiredDocs}
+                    companyInfo={companyInfo}
+                  />
+                ) : (
+                  <LaborPreview
+                    date={laborDate}
+                    person={personName}
+                    contractTerm={`${contractStart}〜${contractEnd}`}
+                    contractRange={contractTerm}
+                    workplace={workplace}
+                    workplaceRange={workplaceRange}
+                    jobDesc={jobDesc}
+                    jobRange={jobRange}
+                    startTime={startTime}
+                    endTime={endTime}
+                    breakTime={breakTime}
+                    overtime={overtime}
+                    holidays={holidays}
+                    leave={leave}
+                    salaryBase={salary}
+                    fixedOvertime={fixedOvertime}
+                    jobAllowance={jobAllowance}
+                    salaryTotal={salaryTotal.replace('円', '')}
+                    commute={commutePay}
+                    payclose={payclose}
+                    payday={payday}
+                    raise={raise}
+                    bonus={bonus}
+                    severance={severance}
+                    insurance={insurance}
+                    companyInfo={companyInfo}
+                  />
+                )}
+              </div>
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 }

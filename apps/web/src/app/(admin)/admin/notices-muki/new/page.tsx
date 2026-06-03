@@ -12,6 +12,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/toast';
 import { apiClient } from '@/lib/api-client';
+import { MukiLaborPreview } from '../_components/MukiLaborPreview';
+import type { CompanyInfo } from '../../notices/_components/OfferPreview';
 
 interface EmployeeOption {
   id: string;
@@ -114,6 +116,11 @@ export default function AdminNoticesMukiNewPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [form, setForm] = useState<MukiNewForm>(initialForm);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
+  useEffect(() => {
+    apiClient<CompanyInfo>('/payroll/company-info').then(setCompanyInfo).catch(() => {});
+  }, []);
 
   const set = <K extends keyof MukiNewForm>(key: K, val: MukiNewForm[K]) =>
     setForm((prev) => ({ ...prev, [key]: val }));
@@ -124,11 +131,7 @@ export default function AdminNoticesMukiNewPage() {
     parseSalary(form.fixedOvertime) +
     parseSalary(form.jobAllowance);
 
-  const handlePreview = () => {
-    router.push('/admin/notices-muki/preview');
-  };
-
-  /* ---- 候補社員の読み込み ---- */
+/* ---- 候補社員の読み込み ---- */
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
   useEffect(() => {
     apiClient<{ data: EmployeeOption[] } | EmployeeOption[]>('/employees?limit=200')
@@ -206,15 +209,14 @@ export default function AdminNoticesMukiNewPage() {
           >
             キャンセル
           </button>
-          <button className="btn-outline text-sm py-2" onClick={handlePreview}>
-            プレビュー
-          </button>
           <button
-            className="btn-primary text-sm py-2 disabled:opacity-50"
-            onClick={handleSave}
-            disabled={issuing}
+            className="btn-primary text-sm py-2"
+            onClick={() => {
+              if (!form.person) { toast('対象社員を選択してください'); return; }
+              setShowPreviewModal(true);
+            }}
           >
-            {issuing ? '発行中...' : '保存・発行'}
+            保存・発行
           </button>
         </div>
       </div>
@@ -683,6 +685,89 @@ export default function AdminNoticesMukiNewPage() {
           </div>
         </div>
       </div>
+
+      {/* ========== 発行確認プレビューモーダル ========== */}
+      {showPreviewModal && (() => {
+        const selectedEmployee = employees.find((e) => e.id === form.person);
+        const personName = selectedEmployee
+          ? `${selectedEmployee.lastName}${selectedEmployee.firstName}`
+          : '';
+        const holidays =
+          [form.holSat && '土', form.holSun && '日', form.holHoliday && '祝']
+            .filter(Boolean)
+            .join('・') + (form.holOther ? `（${form.holOther}）` : '');
+        return (
+          <>
+            <style>{`
+              @page { size: A4 portrait; margin: 15mm; }
+              @media print {
+                body * { visibility: hidden; }
+                #muki-confirm-preview, #muki-confirm-preview * { visibility: visible; }
+                #muki-confirm-preview { position: absolute; left: 0; top: 0; width: 100%; }
+                .no-print { display: none !important; }
+                tr { break-inside: avoid; page-break-inside: avoid; }
+                .print-page-2 { break-before: page !important; page-break-before: always !important; }
+              }
+            `}</style>
+            <div className="fixed inset-0 bg-white z-[300] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-border px-6 py-3 flex items-center justify-between z-10 no-print">
+                <h2 className="text-base font-medium">発行内容の確認（無期転換）</h2>
+                <div className="flex items-center gap-2">
+                  <button
+                    className="btn-outline text-sm py-2"
+                    onClick={() => setShowPreviewModal(false)}
+                  >
+                    戻って修正
+                  </button>
+                  <button
+                    className="btn-outline text-sm py-2"
+                    onClick={() => window.print()}
+                  >
+                    印刷 / PDF保存
+                  </button>
+                  <button
+                    className="btn-primary text-sm py-2 disabled:opacity-50"
+                    onClick={handleSave}
+                    disabled={issuing}
+                  >
+                    {issuing ? '発行中...' : '発行確定'}
+                  </button>
+                </div>
+              </div>
+              <div id="muki-confirm-preview" style={{ maxWidth: 800, margin: '24px auto' }}>
+                <MukiLaborPreview
+                  person={personName}
+                  laborDate={form.laborDate}
+                  convertDate={form.convertDate}
+                  workplace={form.workplace}
+                  workplaceRange={form.workplaceRange}
+                  jobDesc={form.jobDesc}
+                  jobRange={form.jobRange}
+                  startTime={form.startTime}
+                  endTime={form.endTime}
+                  breakTime={form.breakTime}
+                  workTimeSystem={form.workTimeSystem}
+                  overtime={form.overtime}
+                  holidays={holidays}
+                  leave={form.leave}
+                  salary={form.salary}
+                  fixedOvertime={form.fixedOvertime}
+                  jobAllowance={form.jobAllowance}
+                  salaryTotal={salaryTotal > 0 ? salaryTotal.toLocaleString() : ''}
+                  commutePay={form.commutePay}
+                  payClose={form.payClose}
+                  payDay={form.payDay}
+                  raise={form.raise}
+                  bonus={form.bonus}
+                  severance={form.severance}
+                  insurance={form.insurance}
+                  companyInfo={companyInfo}
+                />
+              </div>
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 }
