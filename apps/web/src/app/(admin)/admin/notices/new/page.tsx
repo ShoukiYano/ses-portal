@@ -937,14 +937,28 @@ export default function AdminNoticeNewPage() {
               @page { size: A4 portrait; margin: 15mm; }
               @media print {
                 body * { visibility: hidden; }
-                #notice-confirm-preview, #notice-confirm-preview * { visibility: visible; }
-                #notice-confirm-preview { position: absolute; left: 0; top: 0; width: 100%; }
+                #notice-modal-wrapper {
+                  visibility: visible !important;
+                  position: absolute !important;
+                  top: 0 !important;
+                  left: 0 !important;
+                  width: 100% !important;
+                  overflow: visible !important;
+                  height: auto !important;
+                  background: white !important;
+                }
+                #notice-modal-wrapper * { visibility: visible; }
+                #notice-confirm-preview {
+                  position: static !important;
+                  max-width: 100% !important;
+                  margin: 0 !important;
+                }
                 .no-print { display: none !important; }
                 tr { break-inside: avoid; page-break-inside: avoid; }
                 .print-page-2 { break-before: page !important; page-break-before: always !important; }
               }
             `}</style>
-            <div className="fixed inset-0 bg-white z-[300] overflow-y-auto">
+            <div id="notice-modal-wrapper" className="fixed inset-0 bg-white z-[300] overflow-y-auto">
               <div className="sticky top-0 bg-white border-b border-border px-6 py-3 flex items-center justify-between z-10 no-print">
                 <h2 className="text-base font-medium">発行内容の確認</h2>
                 <div className="flex items-center gap-2">

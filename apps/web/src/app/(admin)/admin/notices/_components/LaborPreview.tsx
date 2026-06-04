@@ -149,6 +149,15 @@ export function LaborPreview(props: LaborPreviewProps) {
               <td className={thCls}>休日</td>
               <td className={tdCls}>・{props.holidays}</td>
             </tr>
+          </tbody>
+        </table>
+        <div className="text-center mt-4 text-xs text-secondary">（次頁に続く）</div>
+      </div>
+
+      {/* page 2 */}
+      <div className={`${pageCls} ${serifCls} print-page-2`} style={{ lineHeight: 1.7 }}>
+        <table className="w-full border-collapse table-fixed">
+          <tbody>
             <tr>
               <td className={thCls}>休暇</td>
               <td className={tdCls}>
@@ -165,15 +174,6 @@ export function LaborPreview(props: LaborPreviewProps) {
                 　　　　　　　　　無給（　　　　　　　　）
               </td>
             </tr>
-          </tbody>
-        </table>
-        <div className="text-center mt-4 text-xs text-secondary">（次頁に続く）</div>
-      </div>
-
-      {/* page 2 */}
-      <div className={`${pageCls} ${serifCls} print-page-2`} style={{ lineHeight: 1.7 }}>
-        <table className="w-full border-collapse table-fixed">
-          <tbody>
             <tr>
               <td className={thCls}>賃金</td>
               <td className={tdCls}>
