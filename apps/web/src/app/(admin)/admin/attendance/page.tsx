@@ -66,6 +66,7 @@ interface MonthlyStatusItem {
   clientConfirmed: boolean;
   clientImported: boolean;
   clientAttendanceRequired?: boolean;
+  totalWorkMinutes?: number;
 }
 
 interface ClosureStatus {
@@ -177,20 +178,21 @@ export default function AdminAttendancePage() {
 
         const rows: AttendanceRow[] = activeAssignments.map(a => {
           const payroll = payrollMap.get(a.employeeId);
+          const statusItem = (statusRes as any)[a.employeeId] as MonthlyStatusItem | undefined;
           const lower = a.settlementLower || 140;
           const upper = a.settlementUpper || 180;
           const midpoint = Math.round((lower + upper) / 2);
 
+          // 実績: attendance.workMinutes の合計を優先、なければ精算幅中央値で代替
+          const actualHours = statusItem?.totalWorkMinutes != null && statusItem.totalWorkMinutes > 0
+            ? Math.round(statusItem.totalWorkMinutes / 60 * 10) / 10
+            : midpoint;
+
           let otHours = 0;
-          let actualHours = midpoint;
           if (payroll) {
             const hourlyRate = payroll.baseSalary > 0 ? Math.round(payroll.baseSalary / 160) : 0;
             if (hourlyRate > 0 && payroll.overtimePay > 0) {
               otHours = Math.round(payroll.overtimePay / (hourlyRate * 1.25));
-            }
-            actualHours = upper + otHours;
-            if (otHours === 0) {
-              actualHours = midpoint;
             }
           }
 
@@ -267,15 +269,17 @@ export default function AdminAttendancePage() {
         (a) => a.status === 'active' && overlapsMonth(a, year, month),
       ).map(a => {
         const payroll = payrollMap.get(a.employeeId);
+        const statusItem = (statusRes as any)[a.employeeId] as MonthlyStatusItem | undefined;
         const lower = a.settlementLower || 140;
         const upper = a.settlementUpper || 180;
         const midpoint = Math.round((lower + upper) / 2);
+        const actualHours = statusItem?.totalWorkMinutes != null && statusItem.totalWorkMinutes > 0
+          ? Math.round(statusItem.totalWorkMinutes / 60 * 10) / 10
+          : midpoint;
         let otHours = 0;
-        let actualHours = midpoint;
         if (payroll) {
           const hourlyRate = payroll.baseSalary > 0 ? Math.round(payroll.baseSalary / 160) : 0;
           if (hourlyRate > 0 && payroll.overtimePay > 0) otHours = Math.round(payroll.overtimePay / (hourlyRate * 1.25));
-          actualHours = otHours === 0 ? midpoint : upper + otHours;
         }
         let status: 'ok' | 'over' | 'under' = 'ok';
         if (actualHours > upper) status = 'over';

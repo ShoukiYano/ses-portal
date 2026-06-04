@@ -1235,6 +1235,17 @@ export class AttendanceService {
     });
     const unconfirmedEmployees = new Set(attendances.map(a => a.employeeId));
 
+    // 実労働時間の合計（社員別）
+    const workMinutesSums = await this.db.attendance.groupBy({
+      by: ['employeeId'],
+      where: { tenantId, workDate: { gte: startDate, lte: endDate } },
+      _sum: { workMinutes: true },
+    });
+    const workMinutesMap = new Map<string, number>();
+    for (const row of workMinutesSums) {
+      workMinutesMap.set(row.employeeId, row._sum.workMinutes ?? 0);
+    }
+
     // 現場勤怠: uploads
     const uploads = await this.db.clientAttendanceUpload.findMany({
       where: { tenantId, yearMonth: ym },
@@ -1317,6 +1328,7 @@ export class AttendanceService {
         clientConfirmed: upload?.confirmed ?? false,
         clientImported: upload?.imported ?? false,
         clientAttendanceRequired,
+        totalWorkMinutes: workMinutesMap.get(eid) ?? 0,
       };
     }
 
