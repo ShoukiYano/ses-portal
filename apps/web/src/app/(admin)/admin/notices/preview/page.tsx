@@ -40,6 +40,7 @@ export default function AdminNoticePreviewPage() {
           .no-print { display: none !important; }
           tr { break-inside: avoid; page-break-inside: avoid; }
           .print-page-2 { break-before: page !important; page-break-before: always !important; }
+          #notice-preview-body > div { border: none !important; box-shadow: none !important; }
         }
       `}</style>
 

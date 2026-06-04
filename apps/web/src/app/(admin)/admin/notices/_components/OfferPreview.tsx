@@ -19,7 +19,7 @@ export interface OfferPreviewProps {
   companyInfo: CompanyInfo | null;
 }
 
-const pageCls = 'bg-white border border-border p-12 min-h-[1050px] mb-6 shadow-sm';
+const pageCls = 'bg-white border border-border p-12 min-h-[1050px] print:min-h-0 print:border-0 print:shadow-none mb-6 shadow-sm';
 const serifCls = 'font-serif text-sm leading-[2] text-[#1A1A1A]';
 
 export function OfferPreview(props: OfferPreviewProps) {

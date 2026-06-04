@@ -192,16 +192,16 @@ export class NoticePdfService {
       ２　休憩時間（${esc(d.breakTime)}）<br/><br/>
       ３　所定時間外労働の有無（${esc(d.overtime)}）
     </td></tr>
+  </table>
+  <div style="text-align:center;margin-top:16px" class="small">（次頁に続く）</div>
+</div>
+<div class="page">
+  <table class="lab" style="margin-top:12px">
     <tr><th>休日</th><td>・${esc(d.holidays)}</td></tr>
     <tr><th>休暇</th><td>１　年次有給休暇　${esc(d.leave)}<br/>
       　　　継続勤務６か月以内の年次有給休暇（有・無）<br/>
       ２　代替休暇（有・無）<br/>
       ３　その他の休暇　有給／無給</td></tr>
-  </table>
-  <div style="text-align:center;margin-top:14px" class="small">（次頁に続く）</div>
-</div>
-<div class="page">
-  <table class="lab">
     <tr><th>賃金</th><td>
       １　給与<br/>
       　　基本給　${esc(d.salaryBase)}円<br/>

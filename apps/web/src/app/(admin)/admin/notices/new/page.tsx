@@ -970,7 +970,13 @@ export default function AdminNoticeNewPage() {
                   </button>
                   <button
                     className="btn-outline text-sm py-2"
-                    onClick={() => window.print()}
+                    onClick={() => {
+                      const docType = isOffer ? '採用内定通知書' : '労働条件通知書';
+                      const prev = document.title;
+                      document.title = `${docType}_${personName}`;
+                      window.onafterprint = () => { document.title = prev; window.onafterprint = null; };
+                      window.print();
+                    }}
                   >
                     印刷 / PDF保存
                   </button>

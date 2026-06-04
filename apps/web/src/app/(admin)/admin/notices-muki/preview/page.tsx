@@ -34,6 +34,7 @@ export default function AdminNoticesMukiPreviewPage() {
           .no-print { display: none !important; }
           tr { break-inside: avoid; page-break-inside: avoid; }
           .print-page-2 { break-before: page !important; page-break-before: always !important; }
+          #muki-preview-body > div { border: none !important; box-shadow: none !important; }
         }
       `}</style>
 

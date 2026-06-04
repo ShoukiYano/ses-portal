@@ -31,7 +31,7 @@ export interface LaborPreviewProps {
   companyInfo: CompanyInfo | null;
 }
 
-const pageCls = 'bg-white border border-border p-12 min-h-[1050px] mb-6 shadow-sm';
+const pageCls = 'bg-white border border-border p-12 min-h-[1050px] print:min-h-0 print:border-0 print:shadow-none mb-6 shadow-sm';
 const serifCls = 'font-serif text-sm leading-[2] text-[#1A1A1A]';
 const thCls = 'border border-[#555] px-2.5 py-2 text-xs font-medium bg-[#f5f5f0] w-[100px] align-top leading-[1.7]';
 const tdCls = 'border border-[#555] px-2.5 py-2 text-xs align-top leading-[1.7] break-words';
@@ -145,10 +145,6 @@ export function LaborPreview(props: LaborPreviewProps) {
                 ３　所定時間外労働の有無（{props.overtime}）
               </td>
             </tr>
-            <tr>
-              <td className={thCls}>休日</td>
-              <td className={tdCls}>・{props.holidays}</td>
-            </tr>
           </tbody>
         </table>
         <div className="text-center mt-4 text-xs text-secondary">（次頁に続く）</div>
@@ -158,6 +154,10 @@ export function LaborPreview(props: LaborPreviewProps) {
       <div className={`${pageCls} ${serifCls} print-page-2`} style={{ lineHeight: 1.7 }}>
         <table className="w-full border-collapse table-fixed">
           <tbody>
+            <tr>
+              <td className={thCls}>休日</td>
+              <td className={tdCls}>・{props.holidays}</td>
+            </tr>
             <tr>
               <td className={thCls}>休暇</td>
               <td className={tdCls}>
