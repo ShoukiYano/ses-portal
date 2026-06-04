@@ -58,6 +58,9 @@ export default function AdminNoticeNewPage() {
   const [person, setPerson] = useState('');
   const [noticeType, setNoticeType] = useState('採用内定通知書');
 
+  /* ---- 共通 ---- */
+  const [representative, setRepresentative] = useState('');
+
   /* ---- 採用内定通知書 ---- */
   const [offerDate, setOfferDate] = useState('');
   const [joinDate, setJoinDate] = useState('');
@@ -187,6 +190,7 @@ export default function AdminNoticeNewPage() {
               deadline,
               cancelReasons: cancelReasons.split('\n').map((s) => s.replace(/^\d+\.\s*/, '').trim()).filter(Boolean),
               requiredDocs,
+              representative: representative || undefined,
             }),
           },
         );
@@ -223,6 +227,7 @@ export default function AdminNoticeNewPage() {
               bonus,
               severance,
               insurance,
+              representative: representative || undefined,
             }),
           },
         );
@@ -291,6 +296,17 @@ export default function AdminNoticeNewPage() {
                 <option value="労働条件通知書">労働条件通知書</option>
               </select>
             </div>
+          </div>
+          <div className="mt-3">
+            <Label>使用者氏名（代表取締役）</Label>
+            <input
+              type="text"
+              className={inputCls}
+              placeholder="例：矢野常貴"
+              value={representative}
+              onChange={(e) => setRepresentative(e.target.value)}
+              style={{ maxWidth: 260 }}
+            />
           </div>
         </div>
 
@@ -1006,6 +1022,7 @@ export default function AdminNoticeNewPage() {
                       .filter(Boolean)}
                     requiredDocs={requiredDocs}
                     companyInfo={companyInfo}
+                    representative={representative}
                   />
                 ) : (
                   <LaborPreview
@@ -1035,6 +1052,7 @@ export default function AdminNoticeNewPage() {
                     severance={severance}
                     insurance={insurance}
                     companyInfo={companyInfo}
+                    representative={representative}
                   />
                 )}
               </div>

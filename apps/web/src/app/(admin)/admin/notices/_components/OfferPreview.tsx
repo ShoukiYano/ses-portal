@@ -17,6 +17,7 @@ export interface OfferPreviewProps {
   cancelReasons: string[];
   requiredDocs: string;
   companyInfo: CompanyInfo | null;
+  representative?: string;
 }
 
 const pageCls = 'bg-white border border-border p-12 min-h-[1050px] print:min-h-0 print:border-0 print:shadow-none mb-6 shadow-sm';
@@ -33,6 +34,12 @@ export function OfferPreview(props: OfferPreviewProps) {
         {companyInfo?.name || ''}
         <br />
         <span className="text-xs">{companyAddress}</span>
+        {props.representative && (
+          <>
+            <br />
+            代表取締役　{props.representative}
+          </>
+        )}
       </div>
       <div className="text-center text-lg font-semibold tracking-[0.2em] my-10">
         採用内定通知書

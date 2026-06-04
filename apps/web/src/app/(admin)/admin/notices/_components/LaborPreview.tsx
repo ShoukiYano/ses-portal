@@ -29,6 +29,7 @@ export interface LaborPreviewProps {
   severance: string;
   insurance: string;
   companyInfo: CompanyInfo | null;
+  representative?: string;
 }
 
 const pageCls = 'bg-white border border-border p-12 min-h-[1050px] print:min-h-0 print:border-0 print:shadow-none mb-6 shadow-sm';
@@ -56,7 +57,7 @@ export function LaborPreview(props: LaborPreviewProps) {
           <br />
           {companyAddress}
           <br />
-          使用者職氏名
+          使用者職氏名　代表取締役　{props.representative || ''}
         </div>
 
         <table className="w-full border-collapse table-fixed">
